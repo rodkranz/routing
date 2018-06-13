@@ -1,12 +1,13 @@
 package routing
 
 import (
-	"testing"
-	"github.com/aws/aws-lambda-go/events"
-	"net/http"
-	"reflect"
 	"fmt"
 	"io"
+	"net/http"
+	"reflect"
+	"testing"
+
+	"github.com/aws/aws-lambda-go/events"
 )
 
 type Test struct {

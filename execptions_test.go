@@ -1,10 +1,10 @@
 package routing
 
 import (
-	"testing"
 	"fmt"
 	"io"
 	"net/http"
+	"testing"
 )
 
 func TestErrNoSupportForMethod_Error(t *testing.T) {

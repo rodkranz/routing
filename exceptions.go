@@ -5,14 +5,17 @@ import (
 )
 
 type (
+	// ErrNoSupportForMethod returns when http verb is not registered.
 	ErrNoSupportForMethod struct {
 		HTTPMethod string
 	}
 
+	// ErrRouterNotFound returns when path doesn't match with any one registered.
 	ErrRouterNotFound struct {
 		Resource string
 	}
 
+	// ErrDispatcher returns when dispatcher returns any error.
 	ErrDispatcher struct {
 		Err error
 	}
