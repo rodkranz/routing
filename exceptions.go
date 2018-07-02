@@ -19,9 +19,6 @@ type (
 	ErrDispatcher struct {
 		Err error
 	}
-
-	// ErrContextNoSupported returns when context is not supported
-	ErrContextNoSupported struct{}
 )
 
 func (e ErrNoSupportForMethod) Error() string {
@@ -34,8 +31,4 @@ func (e ErrRouterNotFound) Error() string {
 
 func (e ErrDispatcher) Error() string {
 	return fmt.Sprintf("dispatcher error: %s", e.Err)
-}
-
-func (e ErrContextNoSupported) Error() string {
-	return fmt.Sprintf("context not supported")
 }

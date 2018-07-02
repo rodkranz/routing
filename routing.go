@@ -85,10 +85,7 @@ func (r Router) Lambda(ctx context.Context, request events.APIGatewayProxyReques
 		return events.APIGatewayProxyResponse{}, ErrRouterNotFound{Resource: request.Resource}
 	}
 
-	c, ok := lambdacontext.FromContext(ctx)
-	if !ok {
-		return events.APIGatewayProxyResponse{}, ErrContextNoSupported{}
-	}
+	c, _ := lambdacontext.FromContext(ctx)
 
 	response, err := dispatcher(Context(c), Request(request))
 	if err != nil {
