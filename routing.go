@@ -5,29 +5,30 @@ import (
 	"net/http"
 	"strings"
 	"unicode"
+	"context"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
-type EncodeResponseFunc func(interface{}) (Response, error)
-type DecodeRequestFunc func(Request) (interface{}, error)
+type (
+	EncodeResponseFunc func(Context, interface{}) (Response, error)
+	DecodeRequestFunc func(Context, Request) (interface{}, error)
 
-//type DecodeResponseFunc func(*Response) (interface{}, error)
-//type EncodeRequestFunc func(*Request, interface{}) error
+	// Dispatcher is the method will invoke when router has been match
+	Dispatcher func(Context, Request) (interface{}, error)
 
-// Dispatcher is the method will invoke when router has been match
-type Dispatcher func(Request) (interface{}, error)
+	// DispatchGroup is map of routers available in your lambda.
+	DispatchGroup map[string]Dispatcher
 
-// DispatchGroup is map of routers available in your lambda.
-type DispatchGroup map[string]Dispatcher
+	// DispatchTable is map of methods available in your lambda.
+	DispatchTable map[string]DispatchGroup
 
-// DispatchTable is map of methods available in your lambda.
-type DispatchTable map[string]DispatchGroup
-
-// Router redirect the correct path to correct dispatcher
-type Router struct {
-	rTable DispatchTable // rTable methods and routers available in you lambda
-}
+	// Router redirect the correct path to correct dispatcher
+	Router struct {
+		rTable DispatchTable // rTable methods and routers available in you lambda
+	}
+)
 
 // New point of router struct
 func New() *Router { return &Router{} }
@@ -73,7 +74,7 @@ func (r *Router) Option(path string, dispatcher Dispatcher) *Router {
 }
 
 // Lambda trigger the events to find router and http verb.
-func (r Router) Lambda(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (r Router) Lambda(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	routingMethod, ok := r.rTable[request.HTTPMethod]
 	if ok == false {
 		return events.APIGatewayProxyResponse{}, ErrNoSupportForMethod{HTTPMethod: request.HTTPMethod}
@@ -84,7 +85,12 @@ func (r Router) Lambda(request events.APIGatewayProxyRequest) (events.APIGateway
 		return events.APIGatewayProxyResponse{}, ErrRouterNotFound{Resource: request.Resource}
 	}
 
-	response, err := dispatcher(Request(request))
+	c, ok := lambdacontext.FromContext(ctx)
+	if !ok {
+		return events.APIGatewayProxyResponse{}, ErrContextNoSupported{}
+	}
+
+	response, err := dispatcher(Context(c), Request(request))
 	if err != nil {
 		return events.APIGatewayProxyResponse{}, ErrDispatcher{Err: err}
 	}
