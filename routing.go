@@ -91,13 +91,13 @@ func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyR
 	// Find Method corresponding in our group router
 	routingMethod, ok := r.rTable[request.HTTPMethod]
 	if ok == false {
-		return events.APIGatewayProxyResponse{}, ErrNoSupportForMethod{HTTPMethod: request.HTTPMethod}
+		return nil, ErrNoSupportForMethod{HTTPMethod: request.HTTPMethod}
 	}
 
 	// Find Path corresponding in our group router
 	dispatcher, ok := routingMethod[request.Resource]
 	if ok == false {
-		return events.APIGatewayProxyResponse{}, ErrRouterNotFound{Resource: request.Resource}
+		return nil, ErrRouterNotFound{Resource: request.Resource}
 	}
 
 	// Get Lambda context
@@ -106,7 +106,7 @@ func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyR
 	// execute dispatcher corresponding to Path and Method
 	response, err := dispatcher(Context(c), RequestProxy(request))
 	if err != nil {
-		return events.APIGatewayProxyResponse{}, ErrDispatcher{Err: err}
+		return nil, ErrDispatcher{Err: err}
 	}
 
 	// case response is already APIGatewayProxyResponse
@@ -117,7 +117,7 @@ func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyR
 	// case response has methods to create an APIGatewayProxyResponse
 	if r, ok := response.(ResponseWithStatusDispatcher); ok {
 		return events.APIGatewayProxyResponse{
-			Body:       r.ToJson(),
+			Body:       r.ToJSON(),
 			StatusCode: r.GetStatusCode(),
 			Headers:    r.GetHeaders(),
 		}, err
@@ -126,9 +126,8 @@ func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyR
 	// case response has methods to create an APIGatewayProxyResponse
 	if r, ok := response.(ResponseDispatcher); ok {
 		return events.APIGatewayProxyResponse{
-			Body:       r.ToJson(),
+			Body:       r.ToJSON(),
 			StatusCode: http.StatusOK,
-			Headers:    r.GetHeaders(),
 		}, err
 	}
 
