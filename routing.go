@@ -32,10 +32,10 @@ type Config struct {
 	DebugMode bool
 }
 
-// New point of router struct
+// New returns new pointer of router struct with config default
 func New() *Router { return &Router{c: Config{}} }
 
-// New point of router struct
+// NewWithConfig returns new pointer of router instance with custom configuration
 func NewWithConfig(c Config) *Router { return &Router{c: c} }
 
 // register all routers and methods and centralize all registers
@@ -83,10 +83,10 @@ func (r *Router) Option(path string, dispatcher Dispatcher) *Router {
 	return r.register(http.MethodOptions, path, dispatcher)
 }
 
-// FnLambda type of lambda
+// FnLambdaProxy type of lambda function
 type FnLambdaProxy func(context.Context, events.APIGatewayProxyRequest) (interface{}, error)
 
-// Lambda trigger the events to find router and http verb.
+// LambdaProxy trigger the events to find router and http verb.
 func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyRequest) (interface{}, error) {
 	// Find Method corresponding in our group router
 	routingMethod, ok := r.rTable[request.HTTPMethod]

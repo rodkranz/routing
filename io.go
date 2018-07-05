@@ -6,13 +6,13 @@ import (
 )
 
 type (
-	// Lambda Context
+	// Context Context
 	Context *lambdacontext.LambdaContext
 
-	// ResponseProxy
+	// ResponseProxy response struct from AWS APIGatewayProxyResponse
 	ResponseProxy events.APIGatewayProxyResponse
 
-	// RequestProxy
+	// RequestProxy request struct from AWS APIGatewayProxyRequest
 	RequestProxy events.APIGatewayProxyRequest
 
 	// ResponseDispatcher interface basic to create an response with APIGatewayProxyResponse
