@@ -102,9 +102,10 @@ func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyR
 
 	// Get Lambda context
 	c, _ := lambdacontext.FromContext(ctx)
+	ctxLambda := Context{LambdaContext: c, Context: ctx}
 
 	// execute dispatcher corresponding to Path and Method
-	response, err := dispatcher(Context(c), RequestProxy(request))
+	response, err := dispatcher(ctxLambda, RequestProxy(request))
 	if err != nil {
 		return nil, ErrDispatcher{Err: err}
 	}

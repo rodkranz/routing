@@ -1,13 +1,18 @@
 package routing
 
 import (
-	"github.com/aws/aws-lambda-go/lambdacontext"
+	"context"
+
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
 type (
 	// Context Context
-	Context *lambdacontext.LambdaContext
+	Context struct {
+		*lambdacontext.LambdaContext
+		context.Context
+	}
 
 	// ResponseProxy response struct from AWS APIGatewayProxyResponse
 	ResponseProxy events.APIGatewayProxyResponse
@@ -29,6 +34,4 @@ type (
 		// GetStatusCode just to set status code of response
 		GetStatusCode() int
 	}
-
-
 )
