@@ -89,7 +89,7 @@ type FnLambdaProxy func(context.Context, events.APIGatewayProxyRequest) (interfa
 
 // LambdaProxy trigger the events to find router and http verb.
 func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyRequest) (interface{}, error) {
-	xray.Configure(xray.Config{LogLevel: "trace"})
+	xray.Configure(xray.Config{LogLevel: "info"})
 	ctx, seg := xray.BeginSegment(ctx, lambdacontext.FunctionName)
 	defer seg.Close(nil)
 
