@@ -1,10 +1,11 @@
 package routing
 
 import (
-		"github.com/aws/aws-lambda-go/events"
+	"context"
+
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-xray-sdk-go/xray"
-	"context"
 )
 
 type (
@@ -33,8 +34,6 @@ type (
 	Context struct {
 		context.Context
 		*lambdacontext.LambdaContext
-		XRaySegment   *xray.Segment
+		XRaySegment *xray.Segment
 	}
 )
-
-
