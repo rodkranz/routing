@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/aws/aws-xray-sdk-go/xray"
 )
 
 type (
@@ -88,6 +89,10 @@ type FnLambdaProxy func(context.Context, events.APIGatewayProxyRequest) (interfa
 
 // LambdaProxy trigger the events to find router and http verb.
 func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyRequest) (interface{}, error) {
+	xray.Configure(xray.Config{LogLevel: "trace"})
+	ctx, seg := xray.BeginSegment(ctx, lambdacontext.FunctionName)
+	defer seg.Close(nil)
+
 	// Find Method corresponding in our group router
 	routingMethod, ok := r.rTable[request.HTTPMethod]
 	if ok == false {
@@ -102,7 +107,7 @@ func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyR
 
 	// Get Lambda context
 	c, _ := lambdacontext.FromContext(ctx)
-	ctxLambda := Context{LambdaContext: c, Context: ctx}
+	ctxLambda := Context{LambdaContext: c, Context: ctx, XRaySegment: seg}
 
 	// execute dispatcher corresponding to Path and Method
 	response, err := dispatcher(ctxLambda, RequestProxy(request))
