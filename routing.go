@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-xray-sdk-go/xray"
 )
 
+var XRayConfig = xray.Config{LogLevel: "info"}
+
 type (
 	// Dispatcher is the method will invoke when router has been match
 	Dispatcher func(Context, RequestProxy) (interface{}, error)
@@ -89,7 +91,7 @@ type FnLambdaProxy func(context.Context, events.APIGatewayProxyRequest) (interfa
 
 // LambdaProxy trigger the events to find router and http verb.
 func (r Router) LambdaProxy(ctx context.Context, request events.APIGatewayProxyRequest) (response interface{}, err error) {
-	xray.Configure(xray.Config{LogLevel: "info"})
+	xray.Configure(XRayConfig)
 	ctx, seg := xray.BeginSegment(ctx, lambdacontext.FunctionName)
 	defer func() {
 		seg.Close(err)
