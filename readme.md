@@ -21,13 +21,16 @@ const (
 func main() {
 	r := routing.New()
 
-	r.Register(http.MethodGet, hello, func(context routing.Context, proxy routing.RequestProxy) (i interface{}, e error) {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusOK,
-			Body:       string("Hello world"),
-		}, nil
-	})
+	r.Register(http.MethodGet, hello, HandlerHelloWord)
 
 	lambda.Start(r.Lambda)
 }
+
+func HandlerHelloWord(context routing.Context, proxy routing.RequestProxy) (i interface{}, e error) {
+	return events.APIGatewayProxyResponse{
+		StatusCode: http.StatusOK,
+		Body:       string("Hello world"),
+	}, nil
+}
+
 ```
