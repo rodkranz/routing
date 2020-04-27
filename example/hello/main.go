@@ -18,7 +18,7 @@ func main() {
 
 	r.Register(http.MethodGet, hello, HandlerHelloWord)
 
-	lambda.Start(r.Lambda)
+	lambda.Start(r.LambdaProxy)
 }
 
 func HandlerHelloWord(context routing.Context, proxy routing.RequestProxy) (i interface{}, e error) {

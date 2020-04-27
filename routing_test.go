@@ -1,35 +1,69 @@
 package routing
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/stretchr/testify/assert"
 )
 
 type Test struct {
-	Name        string
 	Input       events.APIGatewayProxyRequest
 	Action      func() *Router
-	Expected    events.APIGatewayProxyResponse
+	Expected    interface{} // events.APIGatewayProxyResponse
 	ExpectedErr error
 }
 
 func TestNew(t *testing.T) {
-	tests := []Test{
-		{
-			Name: "Method ",
+
+	t.Run("New-With-Config", func(t *testing.T) {
+		test := Test{
 			Input: events.APIGatewayProxyRequest{
 				Resource:   "/root",
 				HTTPMethod: http.MethodPatch,
 				Body:       string("ovos"),
 			},
 			Action: func() *Router {
-				return New().Register(http.MethodPatch, "/root", func(request events.APIGatewayProxyRequest) (interface{}, error) {
-					return "ovos", nil
+				return NewWithConfig(Config{DebugMode: true}).
+					Register(http.MethodPatch,
+						"/root",
+						func(Context, RequestProxy) (interface{}, error) {
+							return events.APIGatewayProxyResponse{
+								StatusCode: http.StatusOK,
+								Body:       "ovos",
+							}, nil
+						})
+			},
+			Expected: events.APIGatewayProxyResponse{
+				Body:       "ovos",
+				StatusCode: http.StatusOK,
+			},
+			ExpectedErr: nil,
+		}
+
+		resp, err := test.Action().LambdaProxy(context.Background(), test.Input)
+
+		assert.Equal(t, test.ExpectedErr, err)
+		assert.EqualValues(t, test.Expected, resp)
+	})
+
+	t.Run("Request-Method-"+http.MethodPatch, func(t *testing.T) {
+		test := Test{
+			Input: events.APIGatewayProxyRequest{
+				Resource:   "/root",
+				HTTPMethod: http.MethodPatch,
+				Body:       string("ovos"),
+			},
+			Action: func() *Router {
+				return New().Register(http.MethodPatch, "/root", func(Context, RequestProxy) (interface{}, error) {
+					return events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+						Body:       "ovos",
+					}, nil
 				})
 			},
 			Expected: events.APIGatewayProxyResponse{
@@ -37,18 +71,27 @@ func TestNew(t *testing.T) {
 				StatusCode: http.StatusOK,
 			},
 			ExpectedErr: nil,
-		},
-		// Test method GET
-		{
-			Name: "Method GET",
+		}
+
+		resp, err := test.Action().LambdaProxy(context.Background(), test.Input)
+
+		assert.Equal(t, test.ExpectedErr, err)
+		assert.EqualValues(t, test.Expected, resp)
+	})
+
+	t.Run("Request-Method-"+http.MethodGet, func(t *testing.T) {
+		test := Test{
 			Input: events.APIGatewayProxyRequest{
 				Resource:   "/root",
 				HTTPMethod: http.MethodGet,
 				Body:       string("ovos"),
 			},
 			Action: func() *Router {
-				return New().Get("/root", func(request events.APIGatewayProxyRequest) (interface{}, error) {
-					return "ovos", nil
+				return New().Get("/root", func(Context, RequestProxy) (interface{}, error) {
+					return events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+						Body:       "ovos",
+					}, nil
 				})
 			},
 			Expected: events.APIGatewayProxyResponse{
@@ -56,18 +99,27 @@ func TestNew(t *testing.T) {
 				StatusCode: http.StatusOK,
 			},
 			ExpectedErr: nil,
-		},
-		// Test method POST
-		{
-			Name: "Method POST",
+		}
+
+		resp, err := test.Action().LambdaProxy(context.Background(), test.Input)
+
+		assert.Equal(t, test.ExpectedErr, err)
+		assert.EqualValues(t, test.Expected, resp)
+	})
+
+	t.Run("Request-Method-"+http.MethodPost, func(t *testing.T) {
+		test := Test{
 			Input: events.APIGatewayProxyRequest{
 				Resource:   "/root",
 				HTTPMethod: http.MethodPost,
 				Body:       string("ovos"),
 			},
 			Action: func() *Router {
-				return New().Post("/root", func(request events.APIGatewayProxyRequest) (interface{}, error) {
-					return "ovos", nil
+				return New().Post("/root", func(Context, RequestProxy) (interface{}, error) {
+					return events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+						Body:       "ovos",
+					}, nil
 				})
 			},
 			Expected: events.APIGatewayProxyResponse{
@@ -75,18 +127,27 @@ func TestNew(t *testing.T) {
 				StatusCode: http.StatusOK,
 			},
 			ExpectedErr: nil,
-		},
-		// Test method PUT
-		{
-			Name: "Method PUST",
+		}
+
+		resp, err := test.Action().LambdaProxy(context.Background(), test.Input)
+
+		assert.Equal(t, test.ExpectedErr, err)
+		assert.EqualValues(t, test.Expected, resp)
+	})
+
+	t.Run("Request-Method-"+http.MethodPut, func(t *testing.T) {
+		test := Test{
 			Input: events.APIGatewayProxyRequest{
 				Resource:   "/root",
 				HTTPMethod: http.MethodPut,
 				Body:       string("ovos"),
 			},
 			Action: func() *Router {
-				return New().Put("/root", func(request events.APIGatewayProxyRequest) (interface{}, error) {
-					return "ovos", nil
+				return New().Put("/root", func(Context, RequestProxy) (interface{}, error) {
+					return events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+						Body:       "ovos",
+					}, nil
 				})
 			},
 			Expected: events.APIGatewayProxyResponse{
@@ -94,68 +155,106 @@ func TestNew(t *testing.T) {
 				StatusCode: http.StatusOK,
 			},
 			ExpectedErr: nil,
-		},
-		// Method not found
-		{
-			Name: "Method not found",
-			Input: events.APIGatewayProxyRequest{
-				Resource:   "/root",
-				HTTPMethod: http.MethodGet,
-				Body:       string("ovos"),
-			},
-			Action: func() *Router {
-				return New().Option("/root", func(request events.APIGatewayProxyRequest) (interface{}, error) {
-					return "ovos", nil
-				})
-			},
-			Expected:    events.APIGatewayProxyResponse{},
-			ExpectedErr: ErrNoSupportForMethod{HTTPMethod: http.MethodGet},
-		},
-		// Router not found
-		{
-			Name: "Router not found",
+		}
+
+		resp, err := test.Action().LambdaProxy(context.Background(), test.Input)
+
+		assert.Equal(t, test.ExpectedErr, err)
+		assert.EqualValues(t, test.Expected, resp)
+	})
+	t.Run("Request-Method-"+http.MethodDelete, func(t *testing.T) {
+		test := Test{
 			Input: events.APIGatewayProxyRequest{
 				Resource:   "/root",
 				HTTPMethod: http.MethodDelete,
 				Body:       string("ovos"),
 			},
 			Action: func() *Router {
-				return New().Delete("/not-found", func(request events.APIGatewayProxyRequest) (interface{}, error) {
-					return "ovos", nil
+				return New().Delete("/root", func(Context, RequestProxy) (interface{}, error) {
+					return events.APIGatewayProxyResponse{
+						StatusCode: http.StatusOK,
+						Body:       "ovos",
+					}, nil
 				})
 			},
-			Expected:    events.APIGatewayProxyResponse{},
-			ExpectedErr: ErrRouterNotFound{Resource: "/root"},
-		},
-		// Handler error
-		{
-			Name: "Handler error",
+			Expected: events.APIGatewayProxyResponse{
+				Body:       "ovos",
+				StatusCode: http.StatusOK,
+			},
+			ExpectedErr: nil,
+		}
+
+		resp, err := test.Action().LambdaProxy(context.Background(), test.Input)
+
+		assert.Equal(t, test.ExpectedErr, err)
+		assert.EqualValues(t, test.Expected, resp)
+	})
+
+	t.Run("Request-Method-NotFound", func(t *testing.T) {
+		test := Test{
+			Input: events.APIGatewayProxyRequest{
+				Resource:   "/root",
+				HTTPMethod: http.MethodPut,
+				Body:       string("ovos"),
+			},
+			Action: func() *Router {
+				return New().Option("/root", func(c Context, proxy RequestProxy) (interface{}, error) {
+					return events.APIGatewayProxyResponse{}, nil
+				})
+			},
+			Expected:    nil,
+			ExpectedErr: ErrNoSupportForMethod{HTTPMethod: http.MethodPut},
+		}
+
+		resp, err := test.Action().LambdaProxy(context.Background(), test.Input)
+
+		assert.Equal(t, test.ExpectedErr, err)
+		assert.EqualValues(t, test.Expected, resp)
+	})
+
+	t.Run("Request-NotFound", func(t *testing.T) {
+		test := Test{
 			Input: events.APIGatewayProxyRequest{
 				Resource:   "/root",
 				HTTPMethod: http.MethodGet,
+				Body:       string("ovos"),
 			},
 			Action: func() *Router {
-				return New().Get("/root", func(request events.APIGatewayProxyRequest) (interface{}, error) {
-					return nil, io.ErrUnexpectedEOF
+				return New().Get("/", func(c Context, proxy RequestProxy) (interface{}, error) {
+					return nil, nil
 				})
 			},
-			Expected:    events.APIGatewayProxyResponse{},
+			Expected:    nil,
+			ExpectedErr: ErrRouterNotFound{Resource: "/root"},
+		}
+
+		resp, err := test.Action().LambdaProxy(context.Background(), test.Input)
+
+		assert.Equal(t, test.ExpectedErr, err)
+		assert.EqualValues(t, test.Expected, resp)
+	})
+
+	t.Run("Request-Handler-Error", func(t *testing.T) {
+		test := Test{
+			Input: events.APIGatewayProxyRequest{
+				Resource:   "/root",
+				HTTPMethod: http.MethodGet,
+				Body:       string("ovos"),
+			},
+			Action: func() *Router {
+				return New().Get("/root", func(c Context, proxy RequestProxy) (interface{}, error) {
+					return events.APIGatewayProxyResponse{}, io.ErrUnexpectedEOF
+				})
+			},
+			Expected:    nil,
 			ExpectedErr: ErrDispatcher{Err: io.ErrUnexpectedEOF},
-		},
-	}
+		}
 
-	for _, test := range tests {
-		t.Run(fmt.Sprintf(test.Name), func(t *testing.T) {
-			resp, err := test.Action().Lambda(test.Input)
-			if err != test.ExpectedErr {
-				t.Errorf("expected error [%s], but got: [%s]", test.ExpectedErr, err)
-			}
+		resp, err := test.Action().LambdaProxy(context.Background(), test.Input)
 
-			if !reflect.DeepEqual(resp, test.Expected) {
-				t.Errorf("expected error [%v], but got: [%v]", test.Expected, resp)
-			}
-		})
-	}
+		assert.Equal(t, test.ExpectedErr, err)
+		assert.EqualValues(t, test.Expected, resp)
+	})
 }
 
 func TestTrim(t *testing.T) {
@@ -175,9 +274,8 @@ func TestTrim(t *testing.T) {
 	for i, test := range tests {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			rsp := trim(test.Input)
-			if test.Output != rsp {
-				t.Errorf("expected error [%s], but got: [%s]", test.Output, rsp)
-			}
+
+			assert.Equal(t, test.Output, rsp)
 		})
 	}
 }
