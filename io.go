@@ -24,7 +24,7 @@ type (
 	// ResponseWithStatusDispatcher interface basic to create an response with APIGatewayProxyResponse with status code
 	ResponseWithStatusDispatcher interface {
 		ResponseDispatcher
-		// GetStatusCode return list of headers for put in response
+		// GetHeaders return list of headers for put in response
 		GetHeaders() map[string]string
 		// GetStatusCode just to set status code of response
 		GetStatusCode() int
